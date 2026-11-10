@@ -1,0 +1,4 @@
+ 6(i)  gcd(          48 ,          18 ) =           6
+
+ 6(ii) Numbers:          12          18          24          36          60
+ GCD of all the numbers =           6

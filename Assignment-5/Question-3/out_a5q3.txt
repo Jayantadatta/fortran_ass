@@ -1,0 +1,13 @@
+   t (s)   s (m)
+    0.00    0.00
+    0.20    1.18
+    0.40    2.72
+    0.60    4.68
+    0.80    7.04
+    1.00    9.80
+    1.20   12.96
+
+ Velocity at t = 0 s       :    5.0000 m/s
+ Velocity at t = 1.2 s     :   16.8000 m/s
+ Acceleration at t = 0 s   :    7.5000 m/s^2
+ Acceleration at t = 1.2 s :   10.0000 m/s^2

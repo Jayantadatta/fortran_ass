@@ -1,0 +1,15 @@
+ W = room is warm, H = someone is home, AC = AC is turned on
+ Version A : AC -> (W and H)
+ Version B : (not W or not H) -> not AC
+
+      W      H     AC      A      B  A<->B
+      T      T      T      T      T      T
+      T      T      F      T      T      T
+      T      F      T      F      F      T
+      T      F      F      T      T      T
+      F      T      T      F      F      T
+      F      T      F      T      T      T
+      F      F      T      F      F      T
+      F      F      F      T      T      T
+
+ A <-> B is true in every row, so it is a tautology.

@@ -1,0 +1,7 @@
+       p       q    p->q   p<->q  (p^q)v(~p^~q)
+       T       T       T       T              T
+       T       F       F       F              F
+       F       T       T       F              F
+       F       F       T       T              T
+
+ p <-> q and (p ^ q) v (~p ^ ~q) are equal in every row, so they are equivalent.

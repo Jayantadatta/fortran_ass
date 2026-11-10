@@ -1,0 +1,15 @@
+ F = fever, B = breathing trouble, C = chest pain
+ Rule 1 : (F and B) or (F and C) or (B and C)
+ Rule 2 : (F and B) or (C and (F or B))
+
+  Fever Breath  Chest  Rule1  Rule2
+      T      T      T      T      T
+      T      T      F      T      T
+      T      F      T      T      T
+      T      F      F      F      F
+      F      T      T      T      T
+      F      T      F      F      F
+      F      F      T      F      F
+      F      F      F      F      F
+
+ Rule 1 and Rule 2 are logically equivalent.

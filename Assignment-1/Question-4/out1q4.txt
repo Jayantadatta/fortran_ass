@@ -1,0 +1,9 @@
+ 4(i)  n =          28
+ Number of divisors (tau)  =           6
+ Sum of divisors (sigma)   =          56
+
+ 4(ii) First 4 perfect numbers:
+           6
+          28
+         496
+        8128
