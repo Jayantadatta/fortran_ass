@@ -39,3 +39,11 @@ In Code::Blocks: save the program as `.f90`, keep the input file in the same fol
 `practice/` is a small Code::Blocks-style practice page for these programs: type a solution, press F9 to build and run it with gfortran, and check the output against the `out...` file. It has copy-type, fill-the-gaps and exam modes, plus a timed mock exam.
 
 To use it on Windows, with Node.js and gfortran (or Code::Blocks) installed, double-click `practice/Start Practice.bat`. It runs on your own computer only.
+
+## For Using Practice Lab: 
+1.Install Node.js and Code::Blocks (the version with MinGW/gfortran).
+2.Open https://github.com/Jayantadatta/fortran_ass, click Code → Download ZIP, and extract it.
+3.Open the practice folder and double-click Start Practice.bat.
+4.Keep the black window open and practise in the window that appears.
+
+(It works on Windows only.)
