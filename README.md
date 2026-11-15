@@ -33,3 +33,9 @@ In Code::Blocks: save the program as `.f90`, keep the input file in the same fol
 - Assignment 2 Q5 lists four initial guesses, so the output has four tables (the sheet says three). The equation has two real roots: 0.61906 and 1.51213.
 - Assignment 4 Q2 uses three variables W (warm), H (home) and AC (AC on): A = AC -> (W and H), B = (not W or not H) -> not AC.
 
+
+## Practice lab
+
+`practice/` is a small Code::Blocks-style practice page for these programs: type a solution, press F9 to build and run it with gfortran, and check the output against the `out...` file. It has copy-type, fill-the-gaps and exam modes, plus a timed mock exam.
+
+To use it on Windows, with Node.js and gfortran (or Code::Blocks) installed, double-click `practice/Start Practice.bat`. It runs on your own computer only.

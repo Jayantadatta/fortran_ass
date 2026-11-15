@@ -1,0 +1,856 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fortran Practice Lab</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='7' height='7' fill='%23d33'/%3E%3Crect x='9' width='7' height='7' fill='%233a3'/%3E%3Crect y='9' width='7' height='7' fill='%2336c'/%3E%3Crect x='9' y='9' width='7' height='7' fill='%23db3'/%3E%3C/svg%3E">
+<style>
+:root{
+  --face:#f0f0f0; --edge:#a0a0a0; --line:#d4d4d4; --sel:#cce8ff; --selb:#99d1ff; --ink:#000; --dim:#555;
+  --mono:"Courier New",Courier,monospace; --ui:"Segoe UI",Tahoma,Arial,sans-serif; --lh:17px; --fs:13.5px;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{background:var(--face);color:var(--ink);font:12px var(--ui);display:flex;flex-direction:column;overflow:hidden;user-select:none}
+button{font:inherit;color:inherit}
+/* menu bar */
+#menubar{display:flex;background:#fff;border-bottom:1px solid var(--line);padding:0 2px;position:relative;z-index:30}
+.menu{padding:3px 8px;cursor:default;position:relative}
+.menu:hover,.menu.open{background:var(--sel)}
+.drop{display:none;position:absolute;left:0;top:100%;background:#f2f2f2;border:1px solid #999;box-shadow:2px 2px 4px #0004;min-width:250px;padding:2px 0}
+.menu.open .drop{display:block}
+.mi{display:flex;justify-content:space-between;gap:28px;padding:4px 22px;white-space:nowrap}
+.mi:hover{background:var(--selb)}
+.mi.off{color:#999;pointer-events:none}
+.mi kbd{font:inherit;color:#444}
+.msep{border-top:1px solid #ccc;margin:3px 0}
+/* toolbar */
+#toolbar{display:flex;align-items:center;gap:2px;padding:3px 4px;border-bottom:1px solid var(--edge);background:linear-gradient(#fafafa,#e9e9e9);flex-wrap:wrap}
+.tb{width:26px;height:24px;border:1px solid transparent;background:none;border-radius:2px;display:grid;place-items:center;padding:0;cursor:default}
+.tb:hover{border-color:var(--selb);background:var(--sel)}
+.tb:active{background:var(--selb)}
+.tb svg{width:18px;height:18px}
+.tsep{width:1px;height:20px;background:#bbb;margin:0 4px}
+.tgrip{width:3px;height:20px;border-left:1px dotted #888;border-right:1px dotted #888;margin:0 3px 0 1px}
+#toolbar select,#toolbar .btn{height:22px;font:12px var(--ui)}
+.btn{border:1px solid #adadad;background:#e1e1e1;padding:0 9px;border-radius:2px;cursor:default;white-space:nowrap}
+.btn:hover{background:#e5f1fb;border-color:#0078d7}
+.btn.go{background:#dff3df;border-color:#4a4}
+.btn.warn{background:#fde8e6;border-color:#c55}
+.btn:disabled{color:#999;background:#eee;border-color:#ccc}
+#timer{font:bold 14px Consolas,monospace;padding:1px 8px;border:1px solid #999;background:#fff;min-width:64px;text-align:center}
+#timer.run{color:#0a5c0a}#timer.low{color:#c00;background:#fff0f0}
+#modeNote{color:var(--dim);margin-left:4px}
+.spacer{flex:1}
+/* main */
+#main{flex:1;display:flex;min-height:0}
+.pane{background:#fff;border:1px solid var(--edge);display:flex;flex-direction:column;min-width:0;min-height:0}
+.cap{background:linear-gradient(#e4ecf7,#c9d7ea);border-bottom:1px solid var(--edge);padding:2px 6px;font-weight:600;display:flex;justify-content:space-between}
+.cap span.x{cursor:default;padding:0 4px;font-weight:400}
+#left{width:226px;margin:2px}
+#center{flex:1;display:flex;flex-direction:column;min-width:0;margin:2px 0}
+#right{width:440px;margin:2px}
+.hide{display:none!important}
+.tabs{display:flex;background:var(--face);border-bottom:1px solid var(--edge);padding:2px 2px 0;gap:1px;overflow:hidden;flex-shrink:0}
+.tab{padding:3px 9px;border:1px solid var(--edge);border-bottom:none;background:#e3e3e3;border-radius:3px 3px 0 0;white-space:nowrap;cursor:default;display:flex;gap:6px;align-items:center;margin-bottom:-1px}
+.tab.on{background:#fff;font-weight:600;border-bottom:1px solid #fff}
+.tab .x{color:#888;font-weight:400}.tab .x:hover{color:#c00}
+.tab.ro{font-style:italic}
+/* tree */
+#tree{flex:1;overflow:auto;padding:4px 2px;font-size:12px}
+.tn{padding:1px 4px;white-space:nowrap;cursor:default;display:flex;align-items:center;gap:4px}
+.tn:hover{background:#eef6ff}.tn.on{background:var(--sel);outline:1px solid var(--selb)}
+.tn b.tw{display:inline-block;width:10px;font-weight:400;color:#666;text-align:center}
+.ic{display:inline-block;width:13px;text-align:center;font-size:11px}
+.s0{color:#bbb}.s1{color:#e08a00}.s2{color:#1a9a1a}.s3{color:#d4a100}
+.tfile{color:#222}.tq{color:var(--dim);overflow:hidden;text-overflow:ellipsis}
+/* editor */
+#edwrap{flex:1;display:flex;flex-direction:column;min-height:120px;border:1px solid var(--edge);background:#fff}
+#ed{flex:1;position:relative;overflow:hidden;background:#fff;font:var(--fs)/var(--lh) var(--mono)}
+#gutter{position:absolute;left:0;top:0;bottom:0;width:52px;background:#f0f0f0;border-right:1px solid #d0d0d0;overflow:hidden;z-index:3;color:#404040}
+#gin{position:absolute;left:0;right:0;top:0;padding-top:2px}
+.gl{height:var(--lh);text-align:right;padding-right:16px;position:relative}
+.gl i{position:absolute;right:3px;top:4px;width:9px;height:9px}
+.gl.e i{background:#e11;border:1px solid #800}.gl.w i{background:#f5c400;border:1px solid #a80;border-radius:50%}
+#hl,#ta{position:absolute;margin:0;border:0;padding:2px 4px;font:inherit;white-space:pre;tab-size:4;letter-spacing:0}
+#hl{left:52px;top:0;pointer-events:none;z-index:1;min-width:100%}
+#ta{left:52px;top:0;width:calc(100% - 52px);height:100%;resize:none;outline:none;background:transparent;color:transparent;caret-color:#000;z-index:2;overflow:auto;user-select:text}
+#ta::selection{background:#3399ff55}
+#ta.plain{color:#000}
+#edEmpty{position:absolute;inset:0;display:grid;place-items:center;color:#888;background:#ababab;z-index:5;font:13px var(--ui);text-align:center}
+.k{color:#0000a0;font-weight:bold}.c{color:#8a8a8a;font-style:italic}.s{color:#0000ff}.n{color:#e000e0}.o{color:#ff0000}.f{color:#007878}
+/* logs */
+#logs{height:220px;margin-top:3px;flex-shrink:0}
+.logbody{flex:1;overflow:auto;background:#fff;user-select:text}
+#buildlog{font:12px/15px var(--mono);white-space:pre-wrap;padding:4px 6px;margin:0}
+#buildlog .err{color:#c00}#buildlog .ok{color:#00008b}#buildlog .hd{color:#00008b}
+table.grid{border-collapse:collapse;width:100%;font:12px var(--ui)}
+.grid th{position:sticky;top:0;background:#eee;border:1px solid #ccc;text-align:left;padding:2px 6px;font-weight:600}
+.grid td{border-bottom:1px solid #eee;padding:2px 6px;vertical-align:top}
+.grid tr.E td{color:#c00}.grid tr.W td{color:#00008b}.grid tr.H td{color:#444;background:#fffbe0;font-style:italic}
+.grid tr.clk:hover td{background:#eef6ff}
+.verdict{padding:6px 10px;font-size:13px;font-weight:600;border-bottom:1px solid #ccc}
+.verdict.pass{background:#dff5df;color:#0a5c0a}.verdict.fail{background:#fde4e1;color:#a00}.verdict.mid{background:#fff5cc;color:#6a5000}
+.diff{display:grid;grid-template-columns:1fr 1fr;font:12px/15px var(--mono)}
+.diff h4{margin:0;padding:3px 6px;background:#eee;border-bottom:1px solid #ccc;font:600 12px var(--ui);position:sticky;top:0}
+.diff pre{margin:0;padding:0}.diff .col{overflow-x:auto;border-right:1px solid #ccc}
+.dl{padding:0 6px;white-space:pre;min-height:15px}.dl.bad{background:#ffd9d6}.dl.miss{background:#ffeab0}
+/* right panel */
+#rbody{flex:1;overflow:auto;padding:8px 10px;user-select:text;font-size:13px;line-height:1.45}
+#rbody pre{font:12.5px/16px var(--mono);background:#f6f6f6;border:1px solid #ddd;padding:6px 8px;overflow-x:auto;margin:6px 0}
+#rbody h2{font-size:15px;margin:0 0 2px}#rbody h3{font-size:13px;margin:14px 0 2px;color:#00008b}
+#rbody .meta{color:var(--dim);margin-bottom:8px}
+.files{border:1px solid #cdd;background:#f3f8ff;padding:6px 8px;margin:8px 0}
+.files code{font:bold 12.5px var(--mono);color:#00008b}
+.sol{font:12.5px/16px var(--mono);border:1px solid #ddd;background:#fff;overflow-x:auto}
+.sl{white-space:pre;padding:0 6px;min-height:16px;border-left:3px solid transparent}
+.sl.done{background:#e3f6e3;border-left-color:#3a3}.sl.next{background:#fff3b0;border-left-color:#d4a100}
+.lock{border:1px dashed #b99;background:#fff7f5;padding:14px;text-align:center;margin-top:10px}
+.bar{height:8px;background:#ddd;border-radius:4px;overflow:hidden;margin:4px 0 8px}.bar i{display:block;height:100%;background:#3a3}
+/* status */
+#status{display:flex;border-top:1px solid var(--edge);background:var(--face);font-size:11px}
+#status div{padding:2px 10px;border-right:1px solid #ccc;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#stPath{flex:1}
+/* dialogs */
+#veil{position:fixed;inset:0;background:#0005;z-index:50;display:none;place-items:center}
+#veil.on{display:grid}
+.dlg{background:var(--face);border:1px solid #555;box-shadow:0 8px 30px #0007;min-width:360px;max-width:min(860px,94vw);max-height:90vh;display:flex;flex-direction:column}
+.dlg .dt{background:#fff;padding:6px 10px;font-weight:600;border-bottom:1px solid #ccc;display:flex;justify-content:space-between}
+.dlg .db{padding:14px 16px;overflow:auto;user-select:text;font-size:13px;line-height:1.5}
+.dlg .df{padding:8px 12px;display:flex;justify-content:flex-end;gap:8px;border-top:1px solid #ddd}
+.dlg input[type=text],.dlg input[type=number]{font:13px var(--ui);padding:3px 5px;border:1px solid #999}
+.dlg pre{font:12.5px/16px var(--mono);background:#fff;border:1px solid #ddd;padding:6px 8px;overflow-x:auto}
+.dlg .btn{height:24px;min-width:76px}
+.modes{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:10px 0}
+.modes div{background:#fff;border:1px solid #ccc;padding:8px 10px}.modes b{color:#00008b}
+#con{position:fixed;inset:0;z-index:60;display:none;place-items:center;background:#0006}
+#con.on{display:grid}
+#conwin{width:min(900px,92vw);height:min(480px,80vh);background:#0c0c0c;border:1px solid #666;display:flex;flex-direction:column;box-shadow:0 10px 40px #000a}
+#contitle{background:#fff;color:#000;padding:5px 10px;font-size:12px;display:flex;justify-content:space-between}
+#conout{flex:1;margin:0;padding:6px 8px;color:#ccc;font:14px/17px Consolas,"Lucida Console",monospace;white-space:pre-wrap;overflow:auto;user-select:text}
+</style>
+</head>
+<body>
+<div id="menubar"></div>
+<div id="toolbar">
+  <span class="tgrip"></span>
+  <button class="tb" data-act="newFile" title="New empty file (Ctrl+Shift+N)"><svg viewBox="0 0 18 18"><path d="M4 1.5h7l3.5 3.5v11.5h-10.500z" fill="#fff" stroke="#555"/><path d="M11 1.500v3.500h3.500" fill="none" stroke="#555"/><path d="M13 10v5M10.500 12.500h5" stroke="#1a9a1a" stroke-width="2"/></svg></button>
+  <button class="tb" data-act="save" title="Save (Ctrl+S)"><svg viewBox="0 0 18 18"><path d="M2.500 2.500h11l2 2v11h-13z" fill="#3a6fc4" stroke="#1d3f7a"/><rect x="5" y="2.500" width="7" height="5" fill="#fff"/><rect x="5" y="10" width="8" height="5.500" fill="#dfe8f6"/></svg></button>
+  <span class="tsep"></span><span class="tgrip"></span>
+  <button class="tb" data-act="build" title="Build (Ctrl+F9)"><svg viewBox="0 0 18 18"><path d="M9 2l1.200 2.100 2.400-.400.300 2.400 2.200 1-1.300 2 1.300 2-2.200 1-.300 2.400-2.400-.400L9 16l-1.200-1.900-2.400.400-.300-2.400-2.200-1 1.300-2-1.300-2 2.200-1 .300-2.400 2.400.400z" fill="#f2c200" stroke="#8a6d00"/><circle cx="9" cy="9" r="2.300" fill="#fff" stroke="#8a6d00"/></svg></button>
+  <button class="tb" data-act="run" title="Run (Ctrl+F10)"><svg viewBox="0 0 18 18"><path d="M4 2.500l11 6.500-11 6.500z" fill="#2db52d" stroke="#0b6e0b"/></svg></button>
+  <button class="tb" data-act="buildRun" title="Build and run (F9)"><svg viewBox="0 0 18 18"><path d="M6.500 1.500l.900 1.500 1.700-.300.200 1.700 1.600.700-.900 1.400.900 1.400-1.600.700-.200 1.700-1.700-.300-.900 1.500-.900-1.500-1.700.300-.200-1.700-1.600-.700.900-1.400-.900-1.400 1.600-.700.200-1.700 1.700.300z" fill="#f2c200" stroke="#8a6d00"/><path d="M9 8.500l7.500 4.200L9 17z" fill="#2db52d" stroke="#0b6e0b"/></svg></button>
+  <button class="tb" data-act="rebuild" title="Rebuild (Ctrl+F11)"><svg viewBox="0 0 18 18"><path d="M3 9a6 6 0 0 1 10.500-4M15 9a6 6 0 0 1-10.500 4" fill="none" stroke="#1b74c9" stroke-width="2"/><path d="M14.500 1.500v4.500h-4.500zM3.500 16.500v-4.500h4.500z" fill="#1b74c9"/></svg></button>
+  <span class="tsep"></span>
+  <span>Build target:</span><select disabled><option>Debug</option></select>
+  <span class="tsep"></span><span class="tgrip"></span>
+  <span>Practice mode:</span>
+  <select id="modeSel" title="How you practise this question">
+    <option value="copy">1. Copy-type (solution visible)</option>
+    <option value="skeleton">2. Fill the gaps</option>
+    <option value="exam">3. Exam (blank, from memory)</option>
+  </select>
+  <div id="timer" title="Time on this attempt. Starts at your first keystroke.">00:00</div>
+  <button class="btn go" data-act="check" id="btnCheck" title="Build, run and compare your output file with the expected one (F8)">&#10004; Check output</button>
+  <button class="btn" data-act="reset" title="Throw away this attempt and start again">Restart</button>
+  <button class="btn" data-act="next" title="Open the question you have practised least">Next weakest &raquo;</button>
+  <span class="spacer"></span>
+  <span id="modeNote"></span>
+  <button class="btn" data-act="mock" id="btnMock">&#9201; Mock exam</button>
+</div>
+<div id="main">
+  <div class="pane" id="left">
+    <div class="cap">Management <span class="x" data-act="toggleLeft">&times;</span></div>
+    <div class="tabs"><div class="tab on">Projects</div><div class="tab" style="color:#999">Files</div><div class="tab" style="color:#999">FSymbols</div></div>
+    <div id="tree"></div>
+  </div>
+  <div id="center">
+    <div id="edwrap">
+      <div class="tabs" id="tabs"></div>
+      <div id="ed">
+        <div id="gutter"><div id="gin"></div></div>
+        <pre id="hl"></pre>
+        <textarea id="ta" spellcheck="false" autocomplete="off" autocapitalize="off" wrap="off"></textarea>
+        <div id="edEmpty" class="hide"></div>
+      </div>
+    </div>
+    <div class="pane" id="logs">
+      <div class="cap">Logs &amp; others <span class="x" data-act="toggleLogs">&times;</span></div>
+      <div class="tabs" id="logtabs"></div>
+      <div class="logbody" id="logbody"></div>
+    </div>
+  </div>
+  <div class="pane" id="right">
+    <div class="cap">Exam sheet <span class="x" data-act="toggleRight">&times;</span></div>
+    <div class="tabs" id="rtabs"></div>
+    <div id="rbody"></div>
+  </div>
+</div>
+<div id="status"><div id="stPath"></div><div>Windows (CR+LF)</div><div>WINDOWS-1252</div><div id="stPos" style="min-width:190px">Line 1, Col 1, Pos 0</div><div>Insert</div><div id="stRW">Read/Write</div><div>default</div></div>
+<div id="veil"></div>
+<div id="con"><div id="conwin"><div id="contitle"><span id="conname"></span><span>&#8212; &#9744; &times;</span></div><pre id="conout"></pre></div></div>
+
+<script src="data.js"></script>
+<script>
+'use strict';
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const isF = n => /\.(f90|f95|f03|f|for)$/i.test(n);
+const fmtT = s => String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(Math.floor(s % 60)).padStart(2, '0');
+const store = {
+  get(k, d) { try { const v = localStorage.getItem('fpl:' + k); return v == null ? d : JSON.parse(v); } catch { return d; } },
+  set(k, v) { try { localStorage.setItem('fpl:' + k, JSON.stringify(v)); } catch {} },
+  del(k) { try { localStorage.removeItem('fpl:' + k); } catch {} },
+};
+
+/* ---------- state ---------- */
+let P = [], byId = {}, info = {}, progress = {};
+let cur = null, mode = 'copy', D = null;      // D = current draft
+let exam = store.get('exam', null);            // running mock exam
+let logTab = 'log', rTab = 'q', lastCheck = null, buildRows = [], logHtml = '', markers = {}, busy = false;
+const ta = $('#ta'), hl = $('#hl'), gin = $('#gin');
+const locked = () => mode === 'mock';
+
+/* ---------- syntax highlighting ---------- */
+const KW = new Set(('program end implicit none integer real double precision complex character logical parameter dimension allocatable allocate deallocate intent in out inout do while if then else elseif endif enddo select case default stop exit cycle call subroutine function recursive result return contains module use only open close read write print format goto continue save data external intrinsic type kind optional pure elemental interface rewind inquire file status unit advance').split(' '));
+const INTR = new Set(('abs sqrt exp log log10 sin cos tan asin acos atan atan2 sinh cosh tanh mod modulo max min sum product maxval minval int nint dble float floor ceiling len len_trim trim adjustl adjustr index achar iachar char ichar random_number random_seed size matmul transpose dot_product huge tiny epsilon sign cmplx repeat maxloc minloc count any all merge reshape').split(' '));
+const TOK = /(!.*$)|('(?:[^']|'')*'?|"(?:[^"]|"")*"?)|(\.(?:and|or|not|eqv|neqv|true|false|eq|ne|lt|le|gt|ge)\.)|(\b\d+(?:\.\d*)?(?:[de][+-]?\d+)?(?:_\w+)?|\.\d+(?:[de][+-]?\d+)?)|([a-z_]\w*)|([-+*\/=<>(),:%&;\[\]]+)|(\s+|.)/gi;
+function hlLine(line) {
+  let out = '';
+  line.replace(TOK, (m, c, s, lo, n, id, op) => {
+    const e = esc(m);
+    if (c) out += '<span class="c">' + e + '</span>';
+    else if (s) out += '<span class="s">' + e + '</span>';
+    else if (lo) out += '<span class="k">' + e + '</span>';
+    else if (n) out += '<span class="n">' + e + '</span>';
+    else if (id) { const l = id.toLowerCase(); out += KW.has(l) ? '<span class="k">' + e + '</span>' : INTR.has(l) ? '<span class="f">' + e + '</span>' : e; }
+    else if (op) out += '<span class="o">' + e + '</span>';
+    else out += e;
+    return '';
+  });
+  return out;
+}
+
+/* ---------- editor ---------- */
+let lineCount = 0;
+function paint() {
+  const name = D && D.active, text = ta.value, lines = text.split('\n');
+  const plain = !name || !isF(name);
+  ta.classList.toggle('plain', plain);
+  hl.innerHTML = plain ? '' : lines.map(hlLine).join('\n') + '\n';
+  const mk = (D && markers[name]) || {};
+  let g = '';
+  for (let i = 1; i <= lines.length; i++) g += '<div class="gl ' + (mk[i] || '') + '">' + i + (mk[i] ? '<i></i>' : '') + '</div>';
+  gin.innerHTML = g; lineCount = lines.length;
+  syncScroll(); caret();
+}
+function syncScroll() {
+  hl.style.transform = 'translate(' + -ta.scrollLeft + 'px,' + -ta.scrollTop + 'px)';
+  gin.style.transform = 'translateY(' + -ta.scrollTop + 'px)';
+}
+function caret() {
+  const s = ta.selectionStart, v = ta.value, ls = v.lastIndexOf('\n', s - 1) + 1;
+  const ln = v.slice(0, s).split('\n').length;
+  $('#stPos').textContent = 'Line ' + ln + ', Col ' + (s - ls + 1) + ', Pos ' + s;
+}
+function rep(s, e, text) {
+  ta.focus(); ta.setSelectionRange(s, e);
+  const ok = text === '' ? (s === e || document.execCommand('delete')) : document.execCommand('insertText', false, text);
+  if (!ok) ta.setRangeText(text, s, e, 'end');
+}
+function onInput() {
+  if (!D || !D.active || isRO(D.active)) return;
+  D.files[D.active] = ta.value;
+  D.dirty[D.active] = true;
+  if (!D.started && ta.value.trim()) D.started = true;
+  delete markers[D.active];
+  paint(); saveDraft(); renderTabs(); queueMatch();
+}
+ta.addEventListener('input', onInput);
+ta.addEventListener('scroll', syncScroll);
+['keyup', 'click', 'focus'].forEach(e => ta.addEventListener(e, caret));
+const OPEN = /^(do\b|if\b.*\bthen$|else\b|program\b|subroutine\b|recursive\b|contains$|select\b|case\b|module\b|.*\bfunction\b)/i;
+const stripC = l => l.replace(/!.*$/, '').trim();
+ta.addEventListener('keydown', e => {
+  if (ta.readOnly) return;
+  const v = ta.value, s = ta.selectionStart, en = ta.selectionEnd;
+  if (e.key === 'Tab') {
+    e.preventDefault();
+    const ls = v.lastIndexOf('\n', s - 1) + 1;
+    if (s !== en && v.slice(s, en).includes('\n') || e.shiftKey) {
+      let le = v.indexOf('\n', en > s && v[en - 1] === '\n' ? en - 1 : en); if (le < 0) le = v.length;
+      const block = v.slice(ls, le).split('\n').map(l => e.shiftKey ? l.replace(/^( {1,4}|\t)/, '') : (l ? '    ' + l : l)).join('\n');
+      rep(ls, le, block); ta.setSelectionRange(ls, ls + block.length);
+    } else rep(s, en, ' '.repeat(4 - ((s - ls) % 4)));
+    onInput();
+  } else if (e.key === 'Enter' && !e.ctrlKey) {
+    e.preventDefault();
+    let ls = v.lastIndexOf('\n', s - 1) + 1, line = v.slice(ls, s), ind = line.match(/^[ \t]*/)[0], pos = s;
+    const t = stripC(line);
+    if (s === en && /^(end|else|contains|case)\b/i.test(t)) {
+      const before = v.slice(0, Math.max(ls - 1, 0)).split('\n').filter(l => l.trim());
+      const prev = before.length ? before[before.length - 1] : '';
+      const pind = prev.match(/^[ \t]*/)[0], pt = stripC(prev);
+      const want = OPEN.test(pt) && !/^end/i.test(pt) ? pind : pind.slice(0, Math.max(pind.length - 4, 0));
+      if (ind.length > want.length && ls > 0) { rep(ls, ls + ind.length, want); pos = s - (ind.length - want.length); ind = want; }
+    }
+    const opener = OPEN.test(t) && !/^end/i.test(t);
+    rep(pos, pos + (en - s), '\n' + ind + (opener ? '    ' : ''));
+    onInput();
+  }
+});
+function commentSel(un) {
+  if (ta.readOnly) return;
+  const v = ta.value, s = ta.selectionStart, en = ta.selectionEnd;
+  const ls = v.lastIndexOf('\n', s - 1) + 1; let le = v.indexOf('\n', en); if (le < 0) le = v.length;
+  const block = v.slice(ls, le).split('\n').map(l => un ? l.replace(/^(\s*)! ?/, '$1') : l.replace(/^(\s*)/, '$1! ')).join('\n');
+  rep(ls, le, block); ta.setSelectionRange(ls, ls + block.length); onInput();
+}
+function gotoLine(name, n) {
+  if (D.active !== name) openTab(name);
+  const lines = ta.value.split('\n'); let pos = 0;
+  for (let i = 0; i < Math.min(n - 1, lines.length - 1); i++) pos += lines[i].length + 1;
+  ta.focus(); ta.setSelectionRange(pos, pos + (lines[n - 1] || '').length);
+  ta.scrollTop = Math.max(0, (n - 6) * 17); syncScroll(); caret();
+}
+
+/* ---------- drafts ---------- */
+const dkey = (id, m) => 'draft:' + id + ':' + m;
+const isRO = n => D && n in D.outputs && !(n in D.files);
+function skeletonize(code) {
+  const keep = /^\s*(program\b|end\s+program|implicit\b|contains\b|end\s+(function|subroutine)|.*\bfunction\b|subroutine\b|recursive\b|$)/i;
+  return code.replace(/\s+$/, '').split('\n').map(l => {
+    if (keep.test(l) || Math.random() > 0.5) return l;
+    return l.match(/^\s*/)[0] + '! >>> write this line';
+  }).join('\n') + '\n';
+}
+function newDraft(p, m) {
+  const d = { files: {}, order: [], outputs: {}, active: '', elapsed: 0, started: false, peeked: false, passed: false, dirty: {}, n: 1 };
+  if (m === 'exam' || m === 'mock') { d.files.Untitled1 = ''; d.order = ['Untitled1']; }
+  else {
+    d.files[p.source] = m === 'skeleton' ? skeletonize(p.solution) : '';
+    d.order = [p.source];
+    for (const f of p.inputs) { d.files[f.name] = f.content; d.order.push(f.name); }
+  }
+  d.active = d.order[0];
+  return d;
+}
+function saveDraft() { if (cur && D) store.set(dkey(cur.id, mode), D); }
+function openProblem(id, m, fresh) {
+  if (exam && !exam.ids.includes(id)) return;
+  if (cur && D) saveDraft();
+  cur = byId[id]; mode = exam ? 'mock' : (m || mode);
+  D = (!fresh && store.get(dkey(id, mode), null)) || newDraft(cur, mode);
+  D.dirty = D.dirty || {}; D.outputs = D.outputs || {};
+  markers = {}; lastCheck = null; buildRows = []; logHtml = '';
+  store.set('last', { id, mode });
+  $('#modeSel').value = mode === 'mock' ? 'exam' : mode;
+  rTab = mode === 'copy' ? 's' : 'q';
+  saveDraft(); renderAll(); openTab(D.active || D.order[0]);
+}
+
+/* ---------- tabs ---------- */
+function allTabs() { return D.order.concat(Object.keys(D.outputs).filter(n => !(n in D.files) && D.openOut && D.openOut[n])); }
+function renderTabs() {
+  $('#tabs').innerHTML = allTabs().map(n => '<div class="tab ' + (n === D.active ? 'on ' : '') + (isRO(n) ? 'ro' : '') + '" data-tab="' + esc(n) + '">' +
+    (D.dirty[n] ? '*' : '') + esc(n) + (isRO(n) ? ' (output)' : '') + ' <span class="x" data-close="' + esc(n) + '">&times;</span></div>').join('');
+  const none = !D.active;
+  $('#edEmpty').classList.toggle('hide', !none);
+  if (none) $('#edEmpty').innerHTML = 'No file is open.<br>File &rarr; New &rarr; Empty file to start.';
+  $('#stPath').textContent = D.active ? 'practice\\workspace\\' + cur.id + '\\' + D.active : '';
+  $('#stRW').textContent = D.active && isRO(D.active) ? 'Read only' : 'Read/Write';
+  document.title = (D.active ? (D.dirty[D.active] ? '*' : '') + D.active + ' - ' : '') + 'Fortran Practice Lab';
+}
+function openTab(n) {
+  if (n && !(n in D.files) && n in D.outputs) { D.openOut = D.openOut || {}; D.openOut[n] = true; }
+  D.active = n && (n in D.files || n in D.outputs) ? n : '';
+  ta.value = D.active ? (D.active in D.files ? D.files[D.active] : D.outputs[D.active]) : '';
+  ta.readOnly = !D.active || isRO(D.active);
+  ta.scrollTop = 0; ta.scrollLeft = 0;
+  paint(); renderTabs(); renderTree(); saveDraft();
+  if (D.active && !ta.readOnly) ta.focus();
+}
+function closeTab(n) {
+  if (isRO(n)) { delete D.openOut[n]; }
+  else {
+    D.order = D.order.filter(x => x !== n);
+    D.closed = D.closed || []; if (!D.closed.includes(n)) D.closed.push(n);
+  }
+  if (D.active === n) openTab(allTabs()[0] || ''); else { renderTabs(); renderTree(); saveDraft(); }
+}
+
+/* ---------- tree ---------- */
+const stat = id => { const g = progress[id] || {}; return g.clean ? 3 : g.pass ? 2 : g.att ? 1 : 0; };
+const ICON = ['&#9675;', '&#9679;', '&#10004;', '&#9733;'];
+function renderTree() {
+  let h = '<div class="tn"><b class="tw">&#9662;</b><b>' + (exam ? 'Mock exam' : 'Workspace') + '</b></div>';
+  const groups = {};
+  for (const p of P) if (!exam || exam.ids.includes(p.id)) (groups[p.a] = groups[p.a] || []).push(p);
+  for (const a of Object.keys(groups)) {
+    const done = groups[a].filter(p => stat(p.id) >= 2).length;
+    h += '<div class="tn" style="padding-left:14px"><b class="tw">&#9662;</b><b>Assignment ' + a + '</b>&nbsp;<span class="tq">' + done + '/' + groups[a].length + '</span></div>';
+    for (const p of groups[a]) {
+      const on = cur && p.id === cur.id, st = exam ? 0 : stat(p.id);
+      h += '<div class="tn ' + (on ? 'on' : '') + '" style="padding-left:30px" data-open="' + p.id + '" title="' + esc(info[p.id].t) + '"><span class="ic s' + st + '">' + ICON[st] + '</span>Q' + p.q + ' <span class="tq">' + esc(info[p.id].t) + '</span></div>';
+      if (on && D) {
+        const files = D.order.concat((D.closed || []).filter(n => n in D.files && !D.order.includes(n)));
+        for (const n of files) h += '<div class="tn tfile ' + (n === D.active ? 'on' : '') + '" style="padding-left:52px" data-file="' + esc(n) + '">&#128196; ' + esc(n) + '</div>';
+        for (const n of Object.keys(D.outputs)) if (!(n in D.files)) h += '<div class="tn tfile ' + (n === D.active ? 'on' : '') + '" style="padding-left:52px;color:#075" data-file="' + esc(n) + '">&#128196; ' + esc(n) + '</div>';
+      }
+    }
+  }
+  $('#tree').innerHTML = h;
+}
+
+/* ---------- right panel ---------- */
+function renderRight() {
+  const tabs = [['q', 'Question'], ['e', 'Expected output'], ['s', 'Solution'], ['c', 'Cheat sheet']];
+  $('#rtabs').innerHTML = tabs.map(([k, t]) => '<div class="tab ' + (k === rTab ? 'on' : '') + '" data-rtab="' + k + '">' + t + '</div>').join('');
+  const q = info[cur.id], b = $('#rbody');
+  const lock = what => '<div class="lock">' + what + ' is locked during the mock exam.</div>';
+  if (rTab === 'q') {
+    const ins = cur.inputs.map(f => '<div><code>' + esc(f.name) + '</code> (input file' + (mode === 'exam' || mode === 'mock' ? ', create it yourself' : '') + ')<pre>' + esc(f.content) + '</pre></div>').join('');
+    b.innerHTML = '<h2>Assignment ' + cur.a + ', Question ' + cur.q + '</h2><div class="meta">' + esc(q.topic) + '</div><div>' + q.h + '</div>' +
+      '<div class="files"><b>File names the sheet requires</b><div>Program: <code>' + esc(cur.source) + '</code></div>' + ins +
+      cur.expected.map(f => '<div>Output: <code>' + esc(f.name) + '</code></div>').join('') + '</div>';
+  } else if (rTab === 'e') {
+    b.innerHTML = locked() ? lock('The expected output') : cur.expected.map(f => '<h3>' + esc(f.name) + '</h3><pre>' + esc(f.content) + '</pre>').join('') +
+      (q.manual ? '<p><i>Random numbers: yours will differ.</i></p>' : '');
+  } else if (rTab === 's') {
+    if (locked()) b.innerHTML = lock('The solution');
+    else if (mode !== 'copy' && !D.peeked && !D.passed) b.innerHTML = '<div class="lock"><p>The solution is hidden in this mode.</p><p>If you look now, this attempt will not count as a clean exam pass.</p><button class="btn warn" data-act="peek">Reveal solution</button></div>';
+    else { b.innerHTML = '<div id="copyInfo"></div><div class="sol" id="sol"></div>'; matchLines(true); }
+  } else b.innerHTML = locked() ? lock('The cheat sheet') : window.CHEATSHEET;
+  b.scrollTop = 0;
+}
+const norm = l => l.replace(/\s+/g, '').toLowerCase();
+let matchT = 0;
+function queueMatch() { clearTimeout(matchT); matchT = setTimeout(() => matchLines(false), 180); }
+function matchLines(first) {
+  const box = $('#sol'); if (!box || rTab !== 's') return;
+  const ref = cur.solution.replace(/\s+$/, '').split('\n');
+  const src = D.order.find(isF), have = {};
+  for (const l of (src ? D.files[src] : '').split('\n')) { const k = norm(l); if (k) have[k] = (have[k] || 0) + 1; }
+  let done = 0, total = 0, next = -1;
+  const cls = ref.map((l, i) => {
+    const k = norm(l); if (!k) return '';
+    total++;
+    if (have[k] > 0) { have[k]--; done++; return 'done'; }
+    if (next < 0) next = i;
+    return '';
+  });
+  if (next >= 0 && mode === 'copy') cls[next] = 'next';
+  box.innerHTML = ref.map((l, i) => '<div class="sl ' + cls[i] + '">' + (hlLine(l) || ' ') + '</div>').join('');
+  $('#copyInfo').innerHTML = '<b>' + done + ' / ' + total + '</b> lines typed correctly' + (mode === 'copy' ? '. Type the yellow line next; do not paste.' : '') + '<div class="bar"><i style="width:' + (total ? done / total * 100 : 0) + '%"></i></div>';
+  if (!first && next >= 0 && mode === 'copy') { const n = box.children[next]; const rb = $('#rbody'); const y = n.offsetTop - rb.clientHeight / 2; if (Math.abs(rb.scrollTop - y) > rb.clientHeight / 3) rb.scrollTop = y; }
+}
+
+/* ---------- logs ---------- */
+const HINTS = [
+  [/has no IMPLICIT type/i, 'This name was never declared (or it is misspelt). Add it to a declaration line such as integer :: i or real(8) :: x.'],
+  [/Unclassifiable statement/i, 'The compiler cannot recognise this line. Look for a misspelt keyword, a missing operator or bracket, or a declaration placed after an executable line.'],
+  [/Unexpected end of file|Expecting END (DO|IF|PROGRAM|FUNCTION|SUBROUTINE)/i, 'A block was not closed. Count your do / end do and if ... then / end if pairs, and check end program.'],
+  [/Unexpected data declaration statement/i, 'All declarations must come before the first executable statement (before open, read, x = ...).'],
+  [/Unterminated character constant/i, 'A quote is missing: every opening \' needs a closing \'.'],
+  [/Expected a right parenthesis|Syntax error in argument list|Invalid character in name/i, 'Check the brackets and commas on this line; one is missing or extra.'],
+  [/Syntax error in (IF-expression|expression)/i, 'The condition or formula is incomplete. Use == for comparison, and .and. / .or. with the dots.'],
+  [/in format string|Nonnegative width required|Positive width required/i, 'The format is wrong. Examples: \'(4i4)\', \'(f10.4)\', \'(a, f8.4)\'. f needs width.decimals.'],
+  [/undefined reference to/i, 'A function or subroutine is used but not defined. Check its spelling and that it sits after contains, before end program.'],
+  [/Rank mismatch|Incompatible ranks/i, 'An array is used with the wrong number of indices (for example a(i) where a(i,j) was declared).'],
+  [/Type mismatch|Cannot convert/i, 'Types do not agree: for example passing an integer where real(8) is expected. Check the declarations on both sides.'],
+  [/Symbol .* already has basic type|Duplicate/i, 'This name is declared twice. Declare it only once.'],
+  [/Return type mismatch|result .* of function/i, 'Declare the function type once: either real(8) function f(x) or inside the function, not both.'],
+  [/Missing actual argument|More actual than formal|Too many arguments/i, 'The call does not have the same number of arguments as the definition.'],
+  [/Unused variable|Unused dummy/i, 'Only a warning: this variable is declared but never used. The program still builds.'],
+  [/may be used uninitialized|used uninitialized/i, 'Only a warning, but check it: the variable may be read before it gets a value.'],
+  [/WinMain|ld returned/i, 'There is no main program to link. The file is empty or the program ... end program lines are missing.'],
+  [/Permission denied/i, 'The old .exe is still running. In Code::Blocks close the black console window first.'],
+  [/End of file/i, 'The program tried to read more data than the input file has, or the file name in open(...) does not match the real file, so an empty file was read.'],
+  [/Bad (integer|real number|logical) /i, 'The input file has text or a wrong kind of value where a number was expected. Compare the read list with the input file line by line.'],
+  [/above upper bound|below lower bound|out of bounds/i, 'An array index went outside the declared size. Check the loop limits against the dimension.'],
+  [/Cannot open file|No such file/i, 'The file was not found. It must be in the same folder as the program and the name must match exactly.'],
+];
+const hint = m => { const h = HINTS.find(x => x[0].test(m)); return h ? h[1] : ''; };
+function parseBuild(out, src) {
+  const rows = []; let pend = null, m;
+  for (const l of out.split('\n')) {
+    if ((m = /^(.*?):(\d+)[:.](\d+):\s*(Error|Warning|Fatal Error):\s*(.*)$/.exec(l))) rows.push({ file: m[1], line: +m[2], type: m[4][0] === 'W' ? 'W' : 'E', msg: m[5] });
+    else if ((m = /^(.*?):(\d+)(?:[:.]\d+)?:\s*$/.exec(l))) pend = { file: m[1], line: +m[2] };
+    else if ((m = /^\s*(Error|Warning|Fatal Error):\s*(.*)$/.exec(l))) { rows.push({ file: pend ? pend.file : src, line: pend ? pend.line : 0, type: m[1][0] === 'W' ? 'W' : 'E', msg: m[2] }); pend = null; }
+    else if ((m = /^(.*?):(\d+):\s*(undefined reference.*)$/.exec(l))) rows.push({ file: m[1], line: +m[2], type: 'E', msg: m[3] });
+    else if (/Permission denied|ld returned|Fatal Error/i.test(l)) rows.push({ file: '', line: 0, type: 'E', msg: l.trim() });
+  }
+  for (const r of rows) r.file = r.file.split(/[\\/]/).pop();
+  return rows;
+}
+function renderLogs() {
+  const nE = buildRows.filter(r => r.type === 'E').length, nW = buildRows.filter(r => r.type === 'W').length;
+  const tabs = [['log', 'Build log'], ['msg', 'Build messages' + (nE + nW ? ' (' + (nE + nW) + ')' : '')], ['chk', 'Output check'], ['prog', 'Progress']];
+  $('#logtabs').innerHTML = tabs.map(([k, t]) => '<div class="tab ' + (k === logTab ? 'on' : '') + '" data-ltab="' + k + '">' + t + '</div>').join('');
+  const b = $('#logbody');
+  if (logTab === 'log') { b.innerHTML = '<pre id="buildlog">' + (logHtml || 'Press F9 to build and run.') + '</pre>'; b.scrollTop = b.scrollHeight; }
+  else if (logTab === 'msg') {
+    b.innerHTML = '<table class="grid"><tr><th style="width:120px">File</th><th style="width:50px">Line</th><th>Message</th></tr>' + (buildRows.length ? buildRows.map((r, i) => {
+      const h = hint(r.msg);
+      return '<tr class="clk ' + r.type + '" data-row="' + i + '"><td>' + esc(r.file) + '</td><td>' + (r.line || '') + '</td><td>' + (r.type === 'W' ? 'Warning: ' : r.type === 'R' ? 'Runtime error: ' : 'Error: ') + esc(r.msg) + '</td></tr>' +
+        (h ? '<tr class="H"><td></td><td></td><td>Hint: ' + esc(h) + '</td></tr>' : '');
+    }).join('') : '<tr><td colspan="3" style="color:#777">No errors or warnings.</td></tr>') + '</table>';
+  } else if (logTab === 'chk') b.innerHTML = lastCheck ? checkHtml(lastCheck) : '<div style="padding:10px;color:#666">Press <b>Check output</b> (F8). Your program is built and run, then its output file is compared with the expected one line by line.</div>';
+  else b.innerHTML = progressHtml();
+}
+function progressHtml() {
+  const clean = P.filter(p => stat(p.id) === 3).length, pass = P.filter(p => stat(p.id) >= 2).length;
+  let h = '<div class="verdict mid">Exam-ready (passed blank, without looking): ' + clean + ' / ' + P.length + ' &nbsp;&middot;&nbsp; Passed in any mode: ' + pass + ' / ' + P.length + '</div>' +
+    '<table class="grid"><tr><th>Question</th><th>Topic</th><th>Status</th><th>Checks</th><th>Passes</th><th>Best copy</th><th>Best gaps</th><th>Best exam</th><th>Last practised</th></tr>';
+  const S = ['Not started', 'Tried', 'Passed with help', 'Exam-ready'];
+  for (const p of P) {
+    const g = progress[p.id] || {}, bt = g.best || {};
+    const t = k => bt[k] ? fmtT(bt[k]) : '';
+    h += '<tr class="clk" data-open="' + p.id + '"><td><span class="ic s' + stat(p.id) + '">' + ICON[stat(p.id)] + '</span> A' + p.a + ' Q' + p.q + ' ' + esc(info[p.id].t) + '</td><td>' + esc(info[p.id].topic) + '</td><td>' + S[stat(p.id)] +
+      '</td><td>' + (g.att || 0) + '</td><td>' + (g.pass || 0) + '</td><td>' + t('copy') + '</td><td>' + t('skeleton') + '</td><td>' + t('exam') + '</td><td>' + (g.last ? new Date(g.last).toLocaleDateString() : '') + '</td></tr>';
+  }
+  return h + '</table>';
+}
+function checkHtml(c) {
+  let h = '<div class="verdict ' + (c.pass ? (c.level === 'exact' ? 'pass' : 'pass') : c.level === 'name' ? 'mid' : 'fail') + '">' + esc(c.summary) + '</div>';
+  for (const d of c.details) {
+    const a = d.mine == null ? [] : d.mine.replace(/\s+$/, '').split('\n'), e = d.exp.replace(/\s+$/, '').split('\n');
+    const n = Math.max(a.length, e.length); let L = '', R = '';
+    for (let i = 0; i < n; i++) {
+      const same = a[i] !== undefined && e[i] !== undefined && tokEq(a[i], e[i]);
+      const cl = d.manual || same ? '' : a[i] === undefined || e[i] === undefined ? 'miss' : 'bad';
+      L += '<div class="dl ' + cl + '">' + esc(a[i] === undefined ? '' : a[i]) + ' </div>'; R += '<div class="dl ' + cl + '">' + esc(e[i] === undefined ? '' : e[i]) + ' </div>';
+    }
+    h += '<div class="diff"><div class="col"><h4>Your ' + esc(d.mineName || d.name) + (d.mine == null ? ' (not created)' : '') + '</h4>' + L + '</div><div class="col"><h4>Expected ' + esc(d.name) + '</h4>' + R + '</div></div>';
+  }
+  return h;
+}
+
+/* ---------- output comparison ---------- */
+const NUM = /^[-+]?(\d+\.?\d*|\.\d+)([ed][-+]?\d+)?$/i;
+const numEq = (a, b) => Math.abs(a - b) <= 1e-6 + 2e-4 * Math.max(Math.abs(a), Math.abs(b));
+const toks = l => l.trim().split(/\s+/).filter(Boolean);
+function tokEq(a, b) {
+  const x = toks(a), y = toks(b);
+  if (x.length !== y.length) return false;
+  return x.every((t, i) => NUM.test(t) && NUM.test(y[i]) ? numEq(parseFloat(t.replace(/d/i, 'e')), parseFloat(y[i].replace(/d/i, 'e'))) : t.toLowerCase() === y[i].toLowerCase());
+}
+const values = s => (s.match(/[-+]?(?:\d+\.?\d*|\.\d+)(?:[eEdD][-+]?\d+)?|\b[TF]\b/g) || []).map(t => /^[TF]$/.test(t) ? t : parseFloat(t.replace(/d/i, 'e')));
+function cmpFile(mine, exp, manual) {
+  const a = mine.replace(/\s+$/, '').split('\n').map(l => l.trimEnd()), e = exp.replace(/\s+$/, '').split('\n').map(l => l.trimEnd());
+  if (manual) return a.filter(l => l.trim()).length === e.filter(l => l.trim()).length && values(mine).length === values(exp).length ? 'manual' : 'fail';
+  if (a.length === e.length && a.every((l, i) => l === e[i])) return 'exact';
+  const af = a.filter(l => l.trim()), ef = e.filter(l => l.trim());
+  if (af.length === ef.length && af.every((l, i) => tokEq(l, ef[i]))) return 'format';
+  const pool = values(mine);
+  for (const v of values(exp)) {
+    const i = pool.findIndex(w => typeof v === 'string' || typeof w === 'string' ? v === w : numEq(v, w));
+    if (i < 0) return 'fail';
+    pool.splice(i, 1);
+  }
+  return values(exp).length ? 'values' : 'fail';
+}
+function evaluate(p, res) {
+  if (res.error) return { pass: false, level: 'compile', summary: res.error, details: [] };
+  if (!res.compile.ok) return { pass: false, level: 'compile', summary: 'NOT BUILT: fix the build errors first (see Build messages).', details: [] };
+  if (res.run.timedOut) return { pass: false, level: 'runtime', summary: 'TIME LIMIT: the program did not finish in 10 seconds. A loop never reaches its exit condition.', details: [] };
+  const outs = {}; for (const o of res.outputs) outs[o.name.toLowerCase()] = o;
+  const manual = !!info[p.id].manual, details = []; let worst = 'exact', nameErr = false;
+  const rank = { exact: 0, manual: 0, format: 1, values: 2, fail: 3 };
+  for (const e of p.expected) {
+    let o = outs[e.name.toLowerCase()], mineName = e.name;
+    if (!o && p.expected.length === 1 && res.outputs.length === 1) { o = res.outputs[0]; mineName = o.name; nameErr = true; }
+    if (!o) { details.push({ name: e.name, exp: e.content, mine: null }); worst = 'fail'; nameErr = nameErr || 'missing'; continue; }
+    const lv = cmpFile(o.content, e.content, manual);
+    details.push({ name: e.name, mineName, exp: e.content, mine: o.content, manual });
+    if (rank[lv] > rank[worst]) worst = lv;
+  }
+  const rt = res.run.code !== 0 ? ' The program also stopped with a runtime error (see the console).' : '';
+  if (nameErr === 'missing') return { pass: false, level: 'fail', details, summary: 'OUTPUT FILE MISSING: expected ' + p.expected.map(e => e.name).join(', ') + '. Your program created: ' + (res.outputs.map(o => o.name).join(', ') || 'nothing') + '.' + rt };
+  if (worst === 'fail') return { pass: false, level: 'fail', details, summary: 'WRONG OUTPUT: the highlighted lines differ from the expected result.' + rt };
+  if (nameErr) return { pass: false, level: 'name', details, summary: 'RIGHT VALUES, WRONG FILE NAME: the sheet requires ' + p.expected[0].name + ' but you wrote ' + details[0].mineName + '.' };
+  const S = { exact: 'PASS: your output matches the expected output exactly.', format: 'PASS: every value matches (only the spacing differs).', values: 'PASS: all expected values are present (your labels or layout differ).', manual: 'PASS: all files exist with the right layout (random numbers are not compared).' };
+  return { pass: true, level: worst, details, summary: S[worst] };
+}
+
+/* ---------- build / run ---------- */
+async function post(url, body) { const r = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }); return r.json(); }
+async function ensureNamed() {
+  for (const n of D.order.slice()) if (/^Untitled\d+$/.test(n) && (D.files[n].trim() || n === D.active)) { if (!(await saveAs(n))) return false; }
+  return true;
+}
+async function build(doRun, check) {
+  if (busy || !D) return;
+  if (!(await ensureNamed())) return;
+  const src = isF(D.active) ? D.active : D.order.find(isF) || Object.keys(D.files).find(isF);
+  buildRows = []; markers = {};
+  if (!src) {
+    logHtml = '<span class="err">Nothing to build: no file with a .f90 name is open.\nCode::Blocks picks the compiler from the file extension. Use File -> Save file as... and name it ' + esc(cur.source) + '</span>';
+    logTab = 'log'; renderLogs(); return;
+  }
+  busy = true; D.dirty = {}; renderTabs();
+  logHtml = '<span class="hd">-------------- Build file: "no target" in "no project" (compiler: unknown)---------------</span>\n\nCompiling ' + esc(src) + ' ...';
+  logTab = 'log'; renderLogs();
+  let res;
+  try { res = await post('/api/build', { id: cur.id, source: src, files: D.files, doRun }); }
+  catch (e) { res = { error: 'The practice server is not running. Start it again with "Start Practice.bat".' }; }
+  busy = false;
+  if (res.error) { logHtml = '<span class="err">' + esc(res.error) + '</span>'; renderLogs(); return res; }
+  const c = res.compile;
+  buildRows = parseBuild(c.output + (c.missing ? '\nFatal Error: ' + c.missing : ''), src);
+  const nE = buildRows.filter(r => r.type === 'E').length, nW = buildRows.length - nE;
+  logHtml = '<span class="hd">-------------- Build file: "no target" in "no project" (compiler: unknown)---------------</span>\n\n' + esc(c.cmd) + '\n' +
+    (c.output ? esc(c.output) + '\n' : '') + (c.missing ? '<span class="err">' + esc(c.missing) + '</span>\n' : '') +
+    '<span class="' + (c.ok ? 'ok' : 'err') + '">Process terminated with status ' + (c.ok ? 0 : 1) + ' (0 minute(s), ' + Math.round(c.ms / 1000) + ' second(s))\n' +
+    (c.ok ? nE : Math.max(nE, 1)) + ' error(s), ' + nW + ' warning(s) (0 minute(s), ' + Math.round(c.ms / 1000) + ' second(s))</span>\n';
+  for (const r of buildRows) if (r.line && r.file in D.files) (markers[r.file] = markers[r.file] || {})[r.line] = r.type === 'E' ? 'e' : (markers[r.file][r.line] || 'w');
+  if (!c.ok) {
+    logTab = 'msg'; renderLogs(); paint();
+    const f = buildRows.find(r => r.type === 'E' && r.line); if (f && f.file in D.files) gotoLine(f.file, f.line);
+    if (check) { lastCheck = evaluate(cur, res); record(lastCheck); }
+    return res;
+  }
+  if (doRun) {
+    const r = res.run, m = /At line (\d+) of file (\S+)/.exec(r.stderr), rm = /Fortran runtime error: (.*)/.exec(r.stderr);
+    if (rm || (r.code !== 0 && r.stderr)) {
+      const row = { file: m ? m[2].split(/[\\/]/).pop() : src, line: m ? +m[1] : 0, type: 'R', msg: rm ? rm[1] : r.stderr.trim().split('\n').pop() };
+      buildRows.push(row); if (row.line && row.file in D.files) (markers[row.file] = markers[row.file] || {})[row.line] = 'e';
+    }
+    D.outputs = {}; D.openOut = {};
+    for (const o of res.outputs) D.outputs[o.name] = o.content;
+    logHtml += '\n<span class="hd">-------------- Run: ' + esc(src.replace(/\.\w+$/, '.exe')) + ' ---------------</span>\n' + (res.outputs.length ? 'Files written by the program: ' + esc(res.outputs.map(o => o.name).join(', ')) : 'The program wrote no files.') + '\n';
+    if (check) { lastCheck = evaluate(cur, res); record(lastCheck); logTab = 'chk'; }
+    else logTab = buildRows.length ? 'msg' : 'log';
+    saveDraft(); renderLogs(); paint(); renderTree();
+    await consoleWin(src, r);
+    const first = res.outputs.find(o => cur.expected.some(e => e.name.toLowerCase() === o.name.toLowerCase())) || res.outputs[0];
+    if (first && !check) openTab(first.name);
+    else if (r.code !== 0 && m) gotoLine(m[2].split(/[\\/]/).pop(), +m[1]);
+    else { renderTabs(); ta.focus(); }
+  } else { logTab = buildRows.length ? 'msg' : 'log'; renderLogs(); paint(); }
+  return res;
+}
+function consoleWin(src, r) {
+  return new Promise(done => {
+    const code = r.code < 0 ? 1 : r.code;
+    $('#conname').textContent = 'practice\\workspace\\' + cur.id + '\\' + src.replace(/\.\w+$/, '.exe');
+    $('#conout').textContent = r.stdout + (r.stderr ? (r.stdout && !r.stdout.endsWith('\n') ? '\n' : '') + r.stderr : '') +
+      (r.timedOut ? '\n[stopped after 10 seconds: the program did not finish]\n' : '') +
+      '\nProcess returned ' + code + ' (0x' + code.toString(16).toUpperCase() + ')   execution time : ' + (r.ms / 1000).toFixed(3) + ' s\nPress any key to continue.\n';
+    $('#con').classList.add('on');
+    const close = e => { e.preventDefault(); e.stopPropagation(); $('#con').classList.remove('on'); removeEventListener('keydown', close, true); $('#con').removeEventListener('mousedown', close); done(); };
+    setTimeout(() => { addEventListener('keydown', close, true); $('#con').addEventListener('mousedown', close); }, 150);
+  });
+}
+function record(c, id, m, d) {
+  id = id || cur.id; m = m || mode; d = d || D;
+  const g = progress[id] = progress[id] || { att: 0, pass: 0, clean: 0, best: {} };
+  g.att++; g.last = Date.now();
+  if (c.pass) {
+    g.pass++;
+    const k = m === 'mock' ? 'exam' : m;
+    if (d.elapsed > 5 && (!g.best[k] || d.elapsed < g.best[k])) g.best[k] = d.elapsed;
+    if ((m === 'exam' || m === 'mock') && !d.peeked) g.clean = (g.clean || 0) + 1;
+    d.passed = true;
+  }
+  post('/api/progress', progress).catch(() => {});
+  if (id === cur.id) { saveDraft(); renderTree(); }
+}
+
+/* ---------- dialogs ---------- */
+function dialog(title, body, buttons, wide) {
+  return new Promise(done => {
+    const v = $('#veil');
+    v.innerHTML = '<div class="dlg" style="' + (wide ? 'width:' + wide + 'px' : '') + '"><div class="dt"><span>' + title + '</span></div><div class="db">' + body + '</div><div class="df">' +
+      buttons.map((b, i) => '<button class="btn" data-i="' + i + '">' + b + '</button>').join('') + '</div></div>';
+    v.classList.add('on');
+    const inp = v.querySelector('input'); (inp || v.querySelector('button')).focus(); if (inp && inp.type === 'text') inp.select();
+    const fin = i => { const out = { i, v: inp ? inp.value : '', el: v.querySelector('.db') }; v.onclick = v.onkeydown = null; done(out); v.classList.remove('on'); };
+    v.onclick = e => { if (e.target.dataset.i) fin(+e.target.dataset.i); };
+    v.onkeydown = e => { e.stopPropagation(); if (e.key === 'Enter' && (inp || buttons.length === 1)) fin(0); if (e.key === 'Escape') fin(buttons.length - 1); };
+  });
+}
+async function saveAs(n) {
+  n = n || D.active; if (!n || isRO(n)) return false;
+  const guess = /^Untitled/.test(n) ? '' : n;
+  const r = await dialog('Save file', '<p>File name (type the extension yourself, as in Code::Blocks):</p><input type="text" style="width:100%" value="' + esc(guess) + '" placeholder="for example ' + esc(cur.source) + '">' +
+    '<p style="color:#555">Programs need <b>.f90</b>. Input files need the exact name from the question sheet.</p>', ['Save', 'Cancel']);
+  const name = r.v.trim();
+  if (r.i !== 0 || !name) return false;
+  if (!/^[\w.\- ]{1,60}$/.test(name)) { await dialog('Save file', 'Use only letters, digits, dot, dash and underscore in the name.', ['OK']); return false; }
+  if (name !== n && name in D.files) { await dialog('Save file', 'A file called ' + esc(name) + ' already exists in this question.', ['OK']); return false; }
+  if (name !== n) {
+    D.files[name] = D.files[n]; delete D.files[n];
+    D.order = D.order.map(x => x === n ? name : x);
+    if (D.active === n) D.active = name;
+  }
+  delete D.dirty[n]; delete D.dirty[name];
+  saveDraft(); paint(); renderTabs(); renderTree();
+  return true;
+}
+const HELP_MODES = '<div class="modes"><div><b>1. Copy-type</b><br>The solution is beside you. Type it line by line; finished lines turn green. Builds finger memory.</div>' +
+  '<div><b>2. Fill the gaps</b><br>Half the lines are removed. Write them back, then check the output. Builds recall.</div>' +
+  '<div><b>3. Exam</b><br>Blank editor, no solution, you create and name every file yourself. Exactly what the exam asks.</div></div>';
+const acts = {
+  async newFile() {
+    let i = 1; while (('Untitled' + i) in D.files) i++;
+    const n = 'Untitled' + i; D.files[n] = ''; D.order.push(n); openTab(n);
+  },
+  async save() { if (!D.active || isRO(D.active)) return; if (/^Untitled\d+$/.test(D.active)) return saveAs(); delete D.dirty[D.active]; saveDraft(); renderTabs(); },
+  saveAs: () => saveAs(),
+  closeFile() { if (D.active) closeTab(D.active); },
+  build: () => build(false), run: () => build(true), buildRun: () => build(true), rebuild: () => build(false),
+  check() { if (locked()) return dialog('Mock exam', 'Checking is switched off during the mock exam. Use Build and run, read your output file, and press <b>Finish exam</b> when you are done.', ['OK']); return build(true, true); },
+  async reset() {
+    if (locked()) return;
+    const r = await dialog('Restart attempt', 'Throw away what you typed for this question in this mode and start again?', ['Restart', 'Cancel']);
+    if (r.i === 0) openProblem(cur.id, mode, true);
+  },
+  next() {
+    if (exam) return;
+    const order = P.slice().sort((a, b) => stat(a.id) - stat(b.id) || ((progress[a.id] || {}).last || 0) - ((progress[b.id] || {}).last || 0));
+    const p = order.find(x => x.id !== cur.id) || order[0];
+    openProblem(p.id, stat(p.id) >= 2 ? 'exam' : mode);
+  },
+  peek() { D.peeked = true; saveDraft(); renderRight(); },
+  undo() { ta.focus(); document.execCommand('undo'); }, redo() { ta.focus(); document.execCommand('redo'); },
+  comment: () => commentSel(false), uncomment: () => commentSel(true),
+  toggleLeft() { $('#left').classList.toggle('hide'); }, toggleLogs() { $('#logs').classList.toggle('hide'); }, toggleRight() { $('#right').classList.toggle('hide'); },
+  setCopy: () => setMode('copy'), setSkel: () => setMode('skeleton'), setExam: () => setMode('exam'),
+  showProgress() { $('#logs').classList.remove('hide'); logTab = 'prog'; renderLogs(); },
+  checklist: () => dialog('Exam-day checklist for Code::Blocks', window.CHECKLIST, ['OK'], 760),
+  cheats() { $('#right').classList.remove('hide'); rTab = 'c'; renderRight(); },
+  howto: () => dialog('How to practise', '<p>Pick a question on the left, then work up through the three modes. A question counts as <b>exam-ready</b> (gold star) only when you pass it in Exam mode without revealing the solution.</p>' + HELP_MODES +
+    '<p><b>F9</b> builds and runs like Code::Blocks. <b>Check output</b> (F8) also compares your output file with the expected one. Use <b>Mock exam</b> for a timed set of random questions.</p>' +
+    '<p style="color:#555">Your attempts are also saved as real files in <b>practice\\workspace</b>, so you can open them in Code::Blocks.</p>', ['Start'], 760),
+  mock() { return exam ? finishExam(false) : startExam(); },
+};
+function setMode(m) { if (locked()) { $('#modeSel').value = 'exam'; return; } openProblem(cur.id, m); }
+
+/* ---------- mock exam ---------- */
+async function startExam() {
+  const as = [...new Set(P.map(p => p.a))];
+  const r = await dialog('Mock exam', '<p>Random questions, blank editor, countdown clock. Solution, expected output, cheat sheet and checking are locked until you finish.</p>' +
+    '<p>Questions: <input type="number" id="mxN" min="1" max="6" value="3" style="width:60px"> &nbsp; Minutes: <input type="number" id="mxM" min="5" max="240" value="60" style="width:70px"></p>' +
+    '<p>From: ' + as.map(a => '<label style="margin-right:10px"><input type="checkbox" class="mxA" value="' + a + '" checked> Assignment ' + a + '</label>').join('') + '</p>' +
+    '<p><label><input type="checkbox" id="mxW" checked> Prefer the questions I have not passed in exam mode yet</label></p>', ['Start exam', 'Cancel'], 560);
+  if (r.i !== 0) return;
+  const pick = [...r.el.querySelectorAll('.mxA:checked')].map(x => +x.value);
+  let pool = P.filter(p => pick.includes(p.a));
+  if (!pool.length) return;
+  const weak = r.el.querySelector('#mxW').checked;
+  pool = pool.map(p => ({ p, k: Math.random() + (weak ? stat(p.id) === 3 ? 2 : 0 : 0) })).sort((a, b) => a.k - b.k).map(x => x.p);
+  const n = Math.max(1, Math.min(+r.el.querySelector('#mxN').value || 3, pool.length)), mins = Math.max(1, +r.el.querySelector('#mxM').value || 60);
+  const ids = pool.slice(0, n).sort((a, b) => a.a - b.a || a.q - b.q).map(p => p.id);
+  for (const id of ids) store.del(dkey(id, 'mock'));
+  if (cur && D) saveDraft();
+  exam = { ids, endsAt: Date.now() + mins * 60000, minutes: mins }; store.set('exam', exam);
+  cur = null; D = null; openProblem(ids[0], 'mock', true);
+}
+async function finishExam(timeUp) {
+  if (!timeUp) { const r = await dialog('Finish exam', 'Finish the mock exam now and mark every question?', ['Finish and mark', 'Keep working']); if (r.i !== 0) return; }
+  saveDraft();
+  const ex = exam, used = Math.round((ex.minutes * 60000 - Math.max(0, ex.endsAt - Date.now())) / 1000);
+  exam = null; store.del('exam');
+  $('#veil').innerHTML = '<div class="dlg"><div class="db">Marking your programs ...</div></div>'; $('#veil').classList.add('on');
+  let rows = '', score = 0;
+  for (const id of ex.ids) {
+    const p = byId[id], d = store.get(dkey(id, 'mock'), null) || newDraft(p, 'mock');
+    const src = Object.keys(d.files).find(isF);
+    let c;
+    if (!src) c = { pass: false, summary: 'No .f90 file was saved for this question.' };
+    else { let res; try { res = await post('/api/build', { id, source: src, files: d.files, doRun: true }); } catch { res = { error: 'Server not running.' }; } c = evaluate(p, res); }
+    if (src) record(c, id, 'mock', d);
+    d.passed = false; store.set(dkey(id, 'exam'), d); store.del(dkey(id, 'mock'));
+    if (c.pass) score++;
+    rows += '<tr class="' + (c.pass ? '' : 'E') + '"><td>A' + p.a + ' Q' + p.q + ' ' + esc(info[id].t) + '</td><td><b>' + (c.pass ? 'PASS' : 'FAIL') + '</b></td><td>' + fmtT(d.elapsed || 0) + '</td><td>' + esc(c.summary) + '</td></tr>';
+  }
+  $('#veil').classList.remove('on');
+  mode = 'exam'; cur = null; D = null; openProblem(ex.ids[0], 'exam');
+  await dialog('Mock exam result', '<div class="verdict ' + (score === ex.ids.length ? 'pass' : score ? 'mid' : 'fail') + '">' + (timeUp ? 'Time is up. ' : '') + 'Score: ' + score + ' / ' + ex.ids.length + ' &nbsp;&middot;&nbsp; Time used: ' + fmtT(used) + '</div>' +
+    '<table class="grid"><tr><th>Question</th><th>Result</th><th>Time on it</th><th>Detail</th></tr>' + rows + '</table><p>Your exam answers are now open in Exam mode, with the solution unlocked, so you can review each one.</p>', ['Review'], 820);
+}
+
+/* ---------- timer ---------- */
+setInterval(() => {
+  const t = $('#timer');
+  if (exam) {
+    const left = Math.max(0, Math.round((exam.endsAt - Date.now()) / 1000));
+    t.textContent = fmtT(left); t.className = left < 300 ? 'low' : 'run';
+    if (D && D.started && !document.hidden) { D.elapsed++; if (D.elapsed % 5 === 0) saveDraft(); }
+    if (left <= 0) finishExam(true);
+    return;
+  }
+  if (!D) return;
+  const going = D.started && !D.passed && !document.hidden && !busy;
+  if (going) { D.elapsed++; if (D.elapsed % 5 === 0) saveDraft(); }
+  t.textContent = fmtT(D.elapsed); t.className = going ? 'run' : '';
+}, 1000);
+
+/* ---------- menus & events ---------- */
+const MENUS = [
+  ['File', [['New empty file', 'newFile', 'Ctrl+Shift+N'], ['Save file', 'save', 'Ctrl+S'], ['Save file as...', 'saveAs'], ['Close file', 'closeFile'], null, ['Restart this attempt', 'reset']]],
+  ['Edit', [['Undo', 'undo', 'Ctrl+Z'], ['Redo', 'redo', 'Ctrl+Y'], null, ['Comment', 'comment', 'Ctrl+Shift+C'], ['Uncomment', 'uncomment', 'Ctrl+Shift+X']]],
+  ['View', [['Manager', 'toggleLeft', 'Shift+F2'], ['Logs', 'toggleLogs', 'F2'], ['Exam sheet', 'toggleRight', 'F4']]],
+  ['Build', [['Build', 'build', 'Ctrl+F9'], ['Run', 'run', 'Ctrl+F10'], ['Build and run', 'buildRun', 'F9'], ['Rebuild', 'rebuild', 'Ctrl+F11']]],
+  ['Practice', [['Mode 1: Copy-type', 'setCopy'], ['Mode 2: Fill the gaps', 'setSkel'], ['Mode 3: Exam', 'setExam'], null, ['Check output', 'check', 'F8'], ['Next weakest question', 'next'], ['My progress', 'showProgress'], null, ['Mock exam: start / finish', 'mock']]],
+  ['Help', [['How to practise', 'howto'], ['Exam-day checklist', 'checklist'], ['Cheat sheet', 'cheats']]],
+];
+$('#menubar').innerHTML = MENUS.map(([n, items]) => '<div class="menu">' + n + '<div class="drop">' + items.map(it => it ? '<div class="mi" data-act="' + it[1] + '"><span>' + it[0] + '</span><kbd>' + (it[2] || '') + '</kbd></div>' : '<div class="msep"></div>').join('') + '</div></div>').join('');
+document.addEventListener('click', e => {
+  const t = e.target, menu = t.closest('.menu'), wasOpen = menu && menu.classList.contains('open');
+  document.querySelectorAll('.menu.open').forEach(m => m.classList.remove('open'));
+  if (menu && !t.closest('.mi') && !wasOpen) { menu.classList.add('open'); return; }
+  const a = t.closest('[data-act]'); if (a && acts[a.dataset.act]) return void acts[a.dataset.act]();
+  const d = t.dataset, c = sel => t.closest(sel);
+  if (d.close) return closeTab(d.close);
+  let x;
+  if ((x = c('[data-tab]'))) return openTab(x.dataset.tab);
+  if ((x = c('[data-file]'))) { const n = x.dataset.file; if (n in D.files && !D.order.includes(n)) D.order.push(n); return openTab(n); }
+  if ((x = c('[data-open]'))) return openProblem(x.dataset.open, exam ? 'mock' : mode);
+  if ((x = c('[data-rtab]'))) { rTab = x.dataset.rtab; return renderRight(); }
+  if ((x = c('[data-ltab]'))) { logTab = x.dataset.ltab; return renderLogs(); }
+  if ((x = c('[data-row]'))) { const r = buildRows[+x.dataset.row]; if (r && r.line && r.file in D.files) gotoLine(r.file, r.line); }
+});
+$('#menubar').addEventListener('mouseover', e => { const m = e.target.closest('.menu'), o = document.querySelector('.menu.open'); if (m && o && m !== o) { o.classList.remove('open'); m.classList.add('open'); } });
+$('#modeSel').addEventListener('change', e => setMode(e.target.value));
+addEventListener('keydown', e => {
+  if ($('#veil').classList.contains('on') || $('#con').classList.contains('on')) return;
+  const k = e.key, C = e.ctrlKey, S = e.shiftKey; let a = '';
+  if (k === 'F9') a = C ? 'build' : 'buildRun';
+  else if (k === 'F10' && C) a = 'run'; else if (k === 'F11' && C) a = 'rebuild';
+  else if (k === 'F8') a = 'check'; else if (k === 'F2') a = S ? 'toggleLeft' : 'toggleLogs'; else if (k === 'F4') a = 'toggleRight';
+  else if (C && !S && k.toLowerCase() === 's') a = 'save';
+  else if (C && S && k.toLowerCase() === 'n') a = 'newFile';
+  else if (C && S && k.toLowerCase() === 'c') a = 'comment'; else if (C && S && k.toLowerCase() === 'x') a = 'uncomment';
+  if (a) { e.preventDefault(); acts[a](); }
+});
+ta.addEventListener('paste', e => { if (mode !== 'copy' && mode !== 'skeleton') return; const t = (e.clipboardData || {}).getData ? e.clipboardData.getData('text') : ''; if (t.split('\n').length > 3) { e.preventDefault(); dialog('Paste blocked', 'Typing is the practice. Pasting more than three lines is switched off in this mode.', ['OK']); } });
+addEventListener('beforeunload', () => saveDraft());
+
+function renderAll() {
+  renderTree(); renderTabs(); renderRight(); renderLogs();
+  const note = { copy: 'Solution visible: type along', skeleton: 'Fill in the missing lines', exam: 'Blank file, from memory', mock: 'MOCK EXAM running' }[mode];
+  $('#modeNote').textContent = note;
+  $('#modeSel').disabled = locked(); $('#btnCheck').disabled = locked();
+  $('#btnMock').innerHTML = exam ? '&#9632; Finish exam' : '&#9201; Mock exam';
+  $('#btnMock').className = 'btn' + (exam ? ' warn' : '');
+}
+
+(async function init() {
+  let data;
+  try { data = await (await fetch('/api/problems')).json(); progress = await (await fetch('/api/progress')).json(); }
+  catch { document.body.innerHTML = '<p style="padding:30px;font-size:15px">The practice server is not running. Double-click <b>Start Practice.bat</b> in the practice folder.</p>'; return; }
+  P = data.problems;
+  for (const p of P) { byId[p.id] = p; info[p.id] = (window.QUESTIONS || {})[p.id] || { t: p.source, topic: '', h: 'See the assignment sheet.' }; }
+  if (!P.length) { document.body.innerHTML = '<p style="padding:30px">No Assignment-N/Question-N folders were found next to the practice folder.</p>'; return; }
+  if (exam && !exam.ids.every(id => byId[id])) { exam = null; store.del('exam'); }
+  const last = store.get('last', null);
+  if (exam) openProblem(exam.ids.includes(last && last.id) ? last.id : exam.ids[0], 'mock');
+  else openProblem(last && byId[last.id] ? last.id : P[0].id, last && last.mode !== 'mock' ? last.mode : 'copy');
+  if (!store.get('seen', false)) { store.set('seen', true); acts.howto(); }
+})();
+</script>
+</body>
+</html>
