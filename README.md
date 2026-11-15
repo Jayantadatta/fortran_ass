@@ -42,8 +42,11 @@ To use it on Windows, with Node.js and gfortran (or Code::Blocks) installed, dou
 
 ## For Using Practice Lab: 
 1.Install Node.js and Code::Blocks (the version with MinGW/gfortran).
+
 2.Open https://github.com/Jayantadatta/fortran_ass, click Code → Download ZIP, and extract it.
+
 3.Open the practice folder and double-click Start Practice.bat.
+
 4.Keep the black window open and practise in the window that appears.
 
 (It works on Windows only.)
