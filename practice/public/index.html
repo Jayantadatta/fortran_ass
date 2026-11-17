@@ -106,6 +106,13 @@ table.grid{border-collapse:collapse;width:100%;font:12px var(--ui)}
 .sol{font:12.5px/16px var(--mono);border:1px solid #ddd;background:#fff;overflow-x:auto}
 .sl{white-space:pre;padding:0 6px;min-height:16px;border-left:3px solid transparent}
 .sl.done{background:#e3f6e3;border-left-color:#3a3}.sl.next{background:#fff3b0;border-left-color:#d4a100}
+#rtabs{flex-wrap:wrap;overflow:visible}#rtabs .tab{padding:3px 7px}
+.exhead{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+.bbtn{width:22px;height:22px;border:1px solid #999;background:#eee;border-radius:3px;font:bold 12px var(--ui);padding:0;cursor:default}
+.bbtn:hover{border-color:#0078d7}.bbtn.on{background:#00008b;color:#fff;border-color:#00008b}
+.steps{margin:6px 0;padding-left:22px}.steps li{margin:0 0 7px}
+.steps code,#rbody p code{font:12.5px var(--mono);background:#f1f1f1;border:1px solid #e2e2e2;padding:0 3px;color:#00008b}
+.bn{font-family:"Nirmala UI","Vrinda","Noto Sans Bengali","Segoe UI",sans-serif;font-size:14px;line-height:1.7}
 .lock{border:1px dashed #b99;background:#fff7f5;padding:14px;text-align:center;margin-top:10px}
 .bar{height:8px;background:#ddd;border-radius:4px;overflow:hidden;margin:4px 0 8px}.bar i{display:block;height:100%;background:#3a3}
 /* status */
@@ -192,6 +199,11 @@ table.grid{border-collapse:collapse;width:100%;font:12px var(--ui)}
 <div id="con"><div id="conwin"><div id="contitle"><span id="conname"></span><span>&#8212; &#9744; &times;</span></div><pre id="conout"></pre></div></div>
 
 <script src="data.js"></script>
+<script src="explain-a1.js"></script>
+<script src="explain-a2.js"></script>
+<script src="explain-a3.js"></script>
+<script src="explain-a4.js"></script>
+<script src="explain-a5.js"></script>
 <script>
 'use strict';
 const $ = s => document.querySelector(s);
@@ -405,7 +417,7 @@ function renderTree() {
 
 /* ---------- right panel ---------- */
 function renderRight() {
-  const tabs = [['q', 'Question'], ['e', 'Expected output'], ['s', 'Solution'], ['c', 'Cheat sheet']];
+  const tabs = [['q', 'Question'], ['l', 'Logic'], ['x', 'Explanation'], ['e', 'Expected'], ['s', 'Solution'], ['c', 'Cheat sheet']];
   $('#rtabs').innerHTML = tabs.map(([k, t]) => '<div class="tab ' + (k === rTab ? 'on' : '') + '" data-rtab="' + k + '">' + t + '</div>').join('');
   const q = info[cur.id], b = $('#rbody');
   const lock = what => '<div class="lock">' + what + ' is locked during the mock exam.</div>';
@@ -414,6 +426,17 @@ function renderRight() {
     b.innerHTML = '<h2>Assignment ' + cur.a + ', Question ' + cur.q + '</h2><div class="meta">' + esc(q.topic) + '</div><div>' + q.h + '</div>' +
       '<div class="files"><b>File names the sheet requires</b><div>Program: <code>' + esc(cur.source) + '</code></div>' + ins +
       cur.expected.map(f => '<div>Output: <code>' + esc(f.name) + '</code></div>').join('') + '</div>';
+  } else if (rTab === 'l' || rTab === 'x') {
+    const ex = (window.EXPLAIN || {})[cur.id], isX = rTab === 'x';
+    if (locked()) b.innerHTML = lock(isX ? 'The explanation' : 'The logic');
+    else if (!ex) b.innerHTML = '<p>Not written yet for this question.</p>';
+    else if (!isX) b.innerHTML = '<h2>The idea in simple words</h2><div class="meta">A' + cur.a + ' Q' + cur.q + ': ' + esc(q.t) + '</div><ol class="steps">' + ex.logic.map(t => '<li>' + t + '</li>').join('') + '</ol>';
+    else if (mode !== 'copy' && !D.peeked && !D.passed) b.innerHTML = '<div class="lock"><p>The explanation walks through the solution code, so it is hidden in this mode.</p><p>If you look now, this attempt will not count as a clean exam pass. The Logic tab stays open.</p><button class="btn warn" data-act="peek">Reveal explanation</button></div>';
+    else {
+      const bn = store.get('bn', false);
+      b.innerHTML = '<div class="exhead"><h2>' + (bn ? 'Code-এর ব্যাখ্যা' : 'How the code works') + '</h2><button class="bbtn ' + (bn ? 'on' : '') + '" data-act="toggleBn" title="' + (bn ? 'Switch to English' : 'Show in Banglish') + '">B</button></div>' +
+        '<ul class="steps ' + (bn ? 'bn' : '') + '">' + (bn ? ex.bn : ex.en).map(t => '<li>' + t + '</li>').join('') + '</ul>';
+    }
   } else if (rTab === 'e') {
     b.innerHTML = locked() ? lock('The expected output') : cur.expected.map(f => '<h3>' + esc(f.name) + '</h3><pre>' + esc(f.content) + '</pre>').join('') +
       (q.manual ? '<p><i>Random numbers: yours will differ.</i></p>' : '');
@@ -714,6 +737,7 @@ const acts = {
     openProblem(p.id, stat(p.id) >= 2 ? 'exam' : mode);
   },
   peek() { D.peeked = true; saveDraft(); renderRight(); },
+  toggleBn() { store.set('bn', !store.get('bn', false)); const y = $('#rbody').scrollTop; renderRight(); $('#rbody').scrollTop = y; },
   undo() { ta.focus(); document.execCommand('undo'); }, redo() { ta.focus(); document.execCommand('redo'); },
   comment: () => commentSel(false), uncomment: () => commentSel(true),
   toggleLeft() { $('#left').classList.toggle('hide'); }, toggleLogs() { $('#logs').classList.toggle('hide'); }, toggleRight() { $('#right').classList.toggle('hide'); },
@@ -721,6 +745,8 @@ const acts = {
   showProgress() { $('#logs').classList.remove('hide'); logTab = 'prog'; renderLogs(); },
   checklist: () => dialog('Exam-day checklist for Code::Blocks', window.CHECKLIST, ['OK'], 760),
   cheats() { $('#right').classList.remove('hide'); rTab = 'c'; renderRight(); },
+  showLogic() { $('#right').classList.remove('hide'); rTab = 'l'; renderRight(); },
+  showExplain() { $('#right').classList.remove('hide'); rTab = 'x'; renderRight(); },
   howto: () => dialog('How to practise', '<p>Pick a question on the left, then work up through the three modes. A question counts as <b>exam-ready</b> (gold star) only when you pass it in Exam mode without revealing the solution.</p>' + HELP_MODES +
     '<p><b>F9</b> builds and runs like Code::Blocks. <b>Check output</b> (F8) also compares your output file with the expected one. Use <b>Mock exam</b> for a timed set of random questions.</p>' +
     '<p style="color:#555">Your attempts are also saved as real files in <b>practice\\workspace</b>, so you can open them in Code::Blocks.</p>', ['Start'], 760),
@@ -731,7 +757,7 @@ function setMode(m) { if (locked()) { $('#modeSel').value = 'exam'; return; } op
 /* ---------- mock exam ---------- */
 async function startExam() {
   const as = [...new Set(P.map(p => p.a))];
-  const r = await dialog('Mock exam', '<p>Random questions, blank editor, countdown clock. Solution, expected output, cheat sheet and checking are locked until you finish.</p>' +
+  const r = await dialog('Mock exam', '<p>Random questions, blank editor, countdown clock. Solution, logic, explanation, expected output, cheat sheet and checking are locked until you finish.</p>' +
     '<p>Questions: <input type="number" id="mxN" min="1" max="6" value="3" style="width:60px"> &nbsp; Minutes: <input type="number" id="mxM" min="5" max="240" value="60" style="width:70px"></p>' +
     '<p>From: ' + as.map(a => '<label style="margin-right:10px"><input type="checkbox" class="mxA" value="' + a + '" checked> Assignment ' + a + '</label>').join('') + '</p>' +
     '<p><label><input type="checkbox" id="mxW" checked> Prefer the questions I have not passed in exam mode yet</label></p>', ['Start exam', 'Cancel'], 560);
@@ -795,7 +821,7 @@ const MENUS = [
   ['View', [['Manager', 'toggleLeft', 'Shift+F2'], ['Logs', 'toggleLogs', 'F2'], ['Exam sheet', 'toggleRight', 'F4']]],
   ['Build', [['Build', 'build', 'Ctrl+F9'], ['Run', 'run', 'Ctrl+F10'], ['Build and run', 'buildRun', 'F9'], ['Rebuild', 'rebuild', 'Ctrl+F11']]],
   ['Practice', [['Mode 1: Copy-type', 'setCopy'], ['Mode 2: Fill the gaps', 'setSkel'], ['Mode 3: Exam', 'setExam'], null, ['Check output', 'check', 'F8'], ['Next weakest question', 'next'], ['My progress', 'showProgress'], null, ['Mock exam: start / finish', 'mock']]],
-  ['Help', [['How to practise', 'howto'], ['Exam-day checklist', 'checklist'], ['Cheat sheet', 'cheats']]],
+  ['Help', [['How to practise', 'howto'], ['Logic of this question', 'showLogic'], ['Explanation of this question', 'showExplain'], ['Exam-day checklist', 'checklist'], ['Cheat sheet', 'cheats']]],
 ];
 $('#menubar').innerHTML = MENUS.map(([n, items]) => '<div class="menu">' + n + '<div class="drop">' + items.map(it => it ? '<div class="mi" data-act="' + it[1] + '"><span>' + it[0] + '</span><kbd>' + (it[2] || '') + '</kbd></div>' : '<div class="msep"></div>').join('') + '</div></div>').join('');
 document.addEventListener('click', e => {
